@@ -1,0 +1,79 @@
+from scipy.io import loadmat
+import numpy as np
+import pandas as pd
+import os
+
+FILES = ["B0005.mat", "B0006.mat", "B0007.mat", "B0018.mat"]
+EOL_SOH = 0.70  # failure threshold
+
+def load_battery(file_name):
+    data = loadmat(file_name, squeeze_me=True, struct_as_record=False)
+    for key, value in data.items():
+        if key.startswith("__"):
+            continue
+        if hasattr(value, "cycle"):
+            return value
+    raise Exception(f"Battery struct not found in {file_name}")
+
+def extract_discharge_rows(file_name, battery_id):
+    battery = load_battery(file_name)
+    rows = []
+
+    discharge_cycle = 0
+    for c in np.atleast_1d(battery.cycle):
+        if str(c.type).strip().lower() == "discharge":
+            discharge_cycle += 1
+            cap = c.data.Capacity
+            if isinstance(cap, np.ndarray):
+                cap = float(cap.flatten()[0])
+            else:
+                cap = float(cap)
+
+            rows.append({
+                "battery_id": battery_id,
+                "cycle": discharge_cycle,
+                "capacity_ah": cap
+            })
+
+    df = pd.DataFrame(rows)
+    return df
+
+all_df = []
+for f in FILES:
+    bid = f.replace(".mat", "")
+    df = extract_discharge_rows(f, bid)
+    all_df.append(df)
+
+df = pd.concat(all_df, ignore_index=True)
+
+# SOH, failed label
+df["cap0"] = df.groupby("battery_id")["capacity_ah"].transform("first")
+df["soh"] = df["capacity_ah"] / df["cap0"]
+df["failed"] = (df["soh"] <= EOL_SOH).astype(int)
+
+# EOL cycle per battery (first time it fails). If never fails -> None
+eol_map = {}
+for bid, g in df.groupby("battery_id"):
+    fail_cycles = g.loc[g["failed"] == 1, "cycle"]
+    eol_map[bid] = int(fail_cycles.iloc[0]) if len(fail_cycles) > 0 else None
+
+df["eol_cycle"] = df["battery_id"].map(eol_map)
+
+# RUL: only for batteries with EOL, else set as NaN
+df["rul"] = np.nan
+for bid, g in df.groupby("battery_id"):
+    eol = eol_map[bid]
+    if eol is not None:
+        idx = df["battery_id"] == bid
+        df.loc[idx, "rul"] = eol - df.loc[idx, "cycle"]
+        df.loc[idx & (df["rul"] < 0), "rul"] = 0
+
+# Save
+os.makedirs("outputs", exist_ok=True)
+out_csv = os.path.join("outputs", "ml_dataset_cycles.csv")
+df.to_csv(out_csv, index=False)
+
+print("✅ Saved ML dataset to:", out_csv)
+print("\nEOL summary:", eol_map)
+print("\nPreview:")
+print(df.head(10))
