@@ -1,4 +1,8 @@
+
 # AI-Based Remaining Useful Life Prediction of Data Center UPS Batteries Using Degradation Data
+
+# AI-Based Remaining Useful Life Prediction of Data Center UPS Batteries
+
 
 ## 📌 Overview
 This repository presents a machine learning–based approach for predicting the **Remaining Useful Life (RUL)** of lithium-ion batteries used in **Uninterruptible Power Supply (UPS)** systems for data centers. Accurate RUL prediction enables predictive maintenance, improves system reliability, and reduces unexpected battery failures in mission-critical infrastructure.
@@ -15,25 +19,42 @@ This project presents a machine learning–based approach for predicting the Rem
 ## 📂 Dataset
 - **Source:** NASA Lithium-Ion Battery Degradation Dataset  
 - **Batteries used:** B0005, B0006, B0007, B0018  
+<<<<<<< HEAD
 - **Total observations:** 636 discharge-cycle observations  
 - **RUL observations:** 336 (from batteries that reached end-of-life)
 
 Each observation corresponds to a complete discharge cycle.
 
 **End-of-Life (EOL) Criterion:**  
+
+- **Observations:** 636 discharge-cycle observations  
+- **RUL samples:** 336 (from batteries that reached end-of-life)
+
+Each observation corresponds to a complete discharge cycle.
+
+**End-of-Life (EOL) criterion:**  
+>>>>>>> b9caccf (Added project README and documentation)
 Battery capacity ≤ 70% of initial capacity.
 
 ---
 
 ## ⚙️ Methodology
 
+
 ### Feature Engineering
+
+### Features
+
 - Discharge cycle number  
 - Discharge capacity (Ah)  
 - State of Health (SOH)
 
 ### Model
+
 - Random Forest Regressor (baseline model)
+
+- Random Forest Regressor (baseline)
+
 - Supervised regression for RUL prediction
 
 ### Evaluation Metrics
@@ -46,8 +67,13 @@ Battery capacity ≤ 70% of initial capacity.
 - **MAE:** 1.86 cycles  
 - **RMSE:** 2.99 cycles  
 
+
 Key observations:
 - Predicted RUL closely matches actual values
+
+Key findings:
+- Predictions closely follow actual RUL values
+
 - Error distribution is centered around zero
 - Feature importance analysis shows SOH contributes over 92% of predictive power
 
@@ -56,10 +82,19 @@ Key observations:
 ## 📈 Visualizations
 The repository includes:
 - Battery capacity degradation curves
+
 - Actual vs. predicted RUL plot
 - RUL prediction error distribution
 
 All figures are available in the `outputs/` directory.
+
+---
+
+
+- Actual vs predicted RUL plot
+- RUL prediction error distribution
+
+All figures are stored in the `outputs/` directory.
 
 ---
 
